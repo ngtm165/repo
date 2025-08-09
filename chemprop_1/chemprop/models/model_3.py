@@ -212,3 +212,15 @@ class MPNN_Simple(pl.LightningModule):
         torch.save(d, buffer)
         buffer.seek(0)
         return super().load_from_checkpoint(buffer, map_location=map_location, hparams_file=hparams_file, strict=strict, **kwargs)
+    
+    @classmethod
+    def load_from_file(cls, model_path, map_location=None, strict=True, **submodules) -> MPNN:
+        submodules, state_dict, hparams = cls._load(model_path, map_location, **submodules)
+        hparams.update(submodules)
+
+        state_dict = cls._add_metric_task_weights_to_state_dict(state_dict, hparams)
+
+        model = cls(**hparams)
+        model.load_state_dict(state_dict, strict=strict)
+
+        return model
